@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
-import { signOut } from 'firebase/auth';        // 2. Import signOut
-import { auth } from '../firebase';             // 3. Import auth
+import { useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 // Components
 import Sidebar from '../Components/Sidebar';
-import Navbar from '../Components/Navbar';
+import Header from '../Components/Header'; // Imported the Header with Dark Mode Toggle
 
 // Views
 import MarketView from '../Components/views/MarketView';
@@ -16,31 +16,31 @@ import NewsView from '../Components/views/NewsView';
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('Market');
   const [nepseData, setNepseData] = useState([]);
-  const [stockList, setStockList] = useState([]);
+  const [stockList, setStockList] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [isMarketOpen, setIsMarketOpen] = useState(false);
   
-  const navigate = useNavigate(); // Hook for redirection
+  const user = auth.currentUser; 
+  const navigate = useNavigate();
 
-  // --- Logic: Handle Logout ---
+  // --- Logout ---
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate('/login'); // Redirect to login page after sign out
+      navigate('/login');
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
-  // --- Logic: Check Market Time ---
+  // --- Check Market Time ---
   const checkMarketStatus = () => {
     const now = new Date();
-    // Convert to Nepal Time
     const nepalTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kathmandu"}));
     const day = nepalTime.getDay();
     const hour = nepalTime.getHours();
     
-    // Sunday(0) to Thursday(4), 11am to 3pm
+    // Market Open: Sun(0) - Thu(4), 11am - 3pm
     if (day >= 0 && day <= 4 && hour >= 11 && hour < 15) {
       setIsMarketOpen(true);
     } else {
@@ -48,21 +48,18 @@ export default function Dashboard() {
     }
   };
 
-  // --- Logic: Fetch Data ---
+  // --- Fetch Data ---
   useEffect(() => {
     checkMarketStatus();
     
     const fetchData = async () => {
       try {
         const chartRes = await axios.get('http://localhost:5000/api/nepse-history');
-        const formattedChart = chartRes.data.map(item => ({
-          time: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          value: item.indexValue
-        }));
-        setNepseData(formattedChart);
+        setNepseData(chartRes.data);
 
         const stockRes = await axios.get('http://localhost:5000/api/stocks');
         setStockList(stockRes.data);
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -71,15 +68,13 @@ export default function Dashboard() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 30000); 
+    const interval = setInterval(fetchData, 10000); 
     return () => clearInterval(interval);
   }, []);
 
-  // --- Logic: Switch Views ---
   const renderContent = () => {
     switch (activeTab) {
       case 'Overview':
-        return <MarketView nepseData={nepseData} stockList={stockList} loading={loading} isMarketOpen={isMarketOpen} />;
       case 'Market':
         return <MarketView nepseData={nepseData} stockList={stockList} loading={loading} isMarketOpen={isMarketOpen} />;
       case 'Portfolio':
@@ -92,24 +87,35 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white font-sans flex overflow-hidden">
+    // MAIN LAYOUT CONTAINER
+    // Light Mode: bg-gray-50 | Dark Mode: bg-[#0f172a]
+    <div className="flex w-full h-screen bg-gray-50 dark:bg-[#0f172a] text-gray-900 dark:text-white overflow-hidden transition-colors duration-200">
       
-      {/* Sidebar now controls activeTab AND handles Logout */}
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        onLogout={handleLogout} 
-      />
+      {/* 1. LEFT SIDEBAR */}
+      <div className="flex-shrink-0">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
 
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto relative">
-        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none" />
-
-        <Navbar />
-
-        <div className="p-6 md:p-8 max-w-7xl mx-auto w-full z-10">
-          {renderContent()}
+      {/* 2. RIGHT MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col h-screen relative w-full">
+        
+        {/* Header (Contains Dark Mode Toggle) */}
+        <div className="sticky top-0 z-30 w-full">
+            <Header /> 
         </div>
-      </main>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth w-full">
+            
+            {/* Background Glow - Subtle in Light, Visible in Dark */}
+            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-200/20 dark:from-blue-900/10 to-transparent pointer-events-none -z-10" />
+            
+            <div className="max-w-7xl mx-auto animate-fade-in pb-20">
+              {renderContent()}
+            </div>
+        </div>
+
+      </div>
     </div>
   );
 }

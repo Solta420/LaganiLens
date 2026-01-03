@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* --- CRITICAL CHANGE: GLOBAL THEME STYLES --- */
+body {
+  /* 1. Set the default background for Light Mode (gray-50) and Dark Mode (#0f172a) */
+  @apply bg-gray-50 text-gray-900 dark:bg-[#0f172a] dark:text-white;
+  
+  /* 2. Enable smooth transition so the color doesn't just "snap" */
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* --- YOUR CUSTOM UTILITIES & ANIMATIONS --- */
 @layer utilities {
   @keyframes blob {
     0%, 100% { transform: translate(0, 0) scale(1); }
@@ -33,9 +43,10 @@
   }
 
   .bg-grid-pattern {
+    /* Made this slightly adaptive so it looks okay in both modes */
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100, 116, 139, 0.1) 1px, transparent 1px);
     background-size: 50px 50px;
   }
 }

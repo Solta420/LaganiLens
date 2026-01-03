@@ -1,9 +1,26 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+// --- FIX START: FORCE .ENV LOADING ---
+
+// 1. Recreate __dirname (It doesn't exist by default in ES Modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 2. Explicitly tell dotenv to look in the CURRENT folder for .env
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// 3. Debugging (Check if it worked)
+console.log("------------------------------------------------");
+console.log("📂 Server Location:", __dirname);
+console.log("🔑 MONGO_URI Status:", process.env.MONGO_URI ? "✅ LOADED" : "❌ UNDEFINED");
+console.log("------------------------------------------------");
+
+// --- FIX END ---
 
 const app = express();
 
@@ -11,74 +28,41 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB error:", err));
+// 1. Connect to MongoDB
+if (!process.env.MONGO_URI) {
+    console.error("⛔ FATAL ERROR: MONGO_URI is missing. Server cannot start.");
+    process.exit(1); // Stop the server if no DB
+}
 
-// ==========================================
-// 1. DEFINE SCHEMAS (Data Models)
-// ==========================================
-// These must match exactly what your Scraper saves to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ Server Connected to MongoDB"))
+    .catch(err => console.error("❌ Server DB Error:", err));
 
-// Schema for Stock Predictions/Cards
+// 2. Define Schema
 const stockSchema = new mongoose.Schema({
-  symbol: String,       // e.g., "NABIL"
-  name: String,         // e.g., "Nabil Bank Ltd"
-  currentPrice: Number, // e.g., 985
-  targetPrice: Number,  // e.g., 1045
-  percentChange: String,// e.g., "+6.09%"
-  timestamp: { type: Date, default: Date.now }
+    symbol: String,
+    name: String,
+    currentPrice: Number,
+    highPrice: Number,
+    lowPrice: Number,
+    openPrice: Number,
+    targetPrice: Number, 
+    percentChange: String,
+    timestamp: { type: Date, default: Date.now }
 });
 
-// Schema for NEPSE Chart History
-const nepseSchema = new mongoose.Schema({
-  indexValue: Number,   // e.g., 2223.00
-  timestamp: { type: Date, default: Date.now }
+const Stock = mongoose.models.Stock || mongoose.model("Stock", stockSchema);
+
+// 3. API Endpoint
+app.get('/api/stocks', async (req, res) => {
+    try {
+        const stocks = await Stock.find();
+        res.json(stocks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
-// Create Models
-// Note: Mongoose automatically looks for the plural, lowercase version of these names 
-// (e.g., 'Stock' -> 'stocks' collection)
-const Stock = mongoose.model("Stock", stockSchema);
-const Nepse = mongoose.model("Nepse", nepseSchema);
-
-// ==========================================
-// 2. API ROUTES (The Bridge to Frontend)
-// ==========================================
-
-// Test route
-app.get("/", (req, res) => {
-  res.send("LaganiLens API is running 🚀");
-});
-
-// GET: Fetch all stocks for the Dashboard Cards
-app.get("/api/stocks", async (req, res) => {
-  try {
-    const stocks = await Stock.find();
-    res.json(stocks);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// GET: Fetch NEPSE history for the Chart
-app.get("/api/nepse-history", async (req, res) => {
-  try {
-    // Get the last 20 entries, sorted by oldest to newest for the chart
-    const history = await Nepse.find().sort({ timestamp: -1 }).limit(20);
-    // Reverse it so it displays left-to-right correctly on the chart
-    res.json(history.reverse());
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ==========================================
-// 3. START SERVER
-// ==========================================
+// Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
