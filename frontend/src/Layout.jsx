@@ -1,17 +1,17 @@
+import { Outlet } from 'react-router-dom';
+import Navbar from './Components/Navbar';
+import Footer from './Components/Footer';
 
-import Footer from './Components/Footer'
-import { Outlet } from 'react-router'
-
-const Root = () => {
-    return (
-
-        <div>
-            <main>
-                <Outlet />
-            </main>
-            <Footer />
-        </div>
-    )
+function Layout() {
+  return (
+    <div className="min-h-screen bg-gray-950 flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
 }
 
-export default Root
+export default Layout;
