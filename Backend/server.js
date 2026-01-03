@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("LaganiLens API is running 🚀");
+  res.send("LaganiLens API is running ");
 });
 
 
