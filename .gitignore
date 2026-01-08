@@ -50,3 +50,23 @@ coverage/
 # OS
 # =========================
 *.log
+
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+
+# CSV/Data files (if you don't want to track them)
+Scraper/docs/Data/*.csv
+
+# OS files
+.DS_Store
+Thumbs.db
