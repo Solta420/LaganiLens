@@ -7,7 +7,7 @@ client = MongoClient("mongodb://localhost:27017")
 db = client["laganiLens"]
 collection = db["nepsestocks"]
 
-symbol = "NABIL"
+symbol = "ADBL"
 
 cursor = collection.find(
     {"symbol": symbol},
@@ -15,8 +15,6 @@ cursor = collection.find(
 )
 
 df = pd.DataFrame(list(cursor))
-
-
 
 
 df["date"] = pd.to_datetime(df["date"])

@@ -1,9 +1,13 @@
 import React from 'react'
 import { auth } from '../firebase'
+import { useNavigate } from "react-router-dom";
+
+
+
 
 const Homepage = () => {
   const user = auth.currentUser
-
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
       {/* Animated background elements */}
@@ -124,6 +128,55 @@ const Homepage = () => {
               </svg>
             </button>
           </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-white/20 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 animate-slide-in-up">
+  <div className="flex items-center gap-3 mb-4">
+    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl">
+      <svg
+        className="w-6 h-6 text-white"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 17v-6m6 6V7M5 21h14"
+        />
+      </svg>
+    </div>
+    <h2 className="text-2xl font-bold text-gray-900">
+      Compare Stocks
+    </h2>
+  </div>
+
+  <p className="text-gray-600 mb-6 leading-relaxed">
+    Compare NEPSE stocks side-by-side using key financial metrics
+    like price, volume, P/E ratio, and 52-week performance.
+  </p>
+
+  <button
+    onClick={() =>navigate ("/comparestocks")}
+    className="group/btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+  >
+    Compare Now
+    <svg
+      className="w-5 h-5 transform group-hover/btn:translate-x-1 transition-transform"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 7l5 5m0 0l-5 5m5-5H6"
+      />
+    </svg>
+  </button>
+</div>
+
         </div>
       </div>
     </div>
